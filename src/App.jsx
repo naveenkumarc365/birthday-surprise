@@ -12,7 +12,7 @@ import WhyIChoseThese from "./components/WhyIChoseThese";
 import FinalSection from "./components/FinalSection";
 import SecretRevealModal from "./components/SecretRevealModal";
 
-const UNLOCK_DATE = "2026-03-29T00:00:00";
+const UNLOCK_DATE = "2026-03-30T00:00:00";
 const UNLOCK_TIMESTAMP = new Date(UNLOCK_DATE).getTime();
 
 function App() {
