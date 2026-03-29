@@ -1,5 +1,10 @@
 import { useState, useRef, useEffect } from "react";
-import { AnimatePresence, motion, useAnimationControls, useInView } from "framer-motion";
+import {
+  AnimatePresence,
+  motion,
+  useAnimationControls,
+  useInView,
+} from "framer-motion";
 import { cn } from "../lib/cn";
 import { radii } from "../lib/theme";
 
@@ -19,10 +24,27 @@ function PersonalLetter() {
   useEffect(() => {
     if (!isInView) return;
     const run = async () => {
-      await lineOne.start({ opacity: 1, y: 0, transition: { duration: 0.66, ease: "easeOut" } });
-      await lineTwo.start({ opacity: 1, y: 0, transition: { duration: 0.62, ease: "easeOut" } });
-      await lineThree.start({ opacity: 1, y: 0, transition: { duration: 0.58, ease: "easeOut" } });
-      cardFade.start({ opacity: 1, y: 0, scale: 1, transition: { duration: 0.8, ease: "easeOut", delay: 0.1 } });
+      await lineOne.start({
+        opacity: 1,
+        y: 0,
+        transition: { duration: 0.66, ease: "easeOut" },
+      });
+      await lineTwo.start({
+        opacity: 1,
+        y: 0,
+        transition: { duration: 0.62, ease: "easeOut" },
+      });
+      await lineThree.start({
+        opacity: 1,
+        y: 0,
+        transition: { duration: 0.58, ease: "easeOut" },
+      });
+      cardFade.start({
+        opacity: 1,
+        y: 0,
+        scale: 1,
+        transition: { duration: 0.8, ease: "easeOut", delay: 0.1 },
+      });
     };
     run();
   }, [isInView, lineOne, lineTwo, lineThree, cardFade]);
@@ -53,7 +75,11 @@ function PersonalLetter() {
   }, []);
 
   return (
-    <section id="personal-letter" ref={sceneRef} className="relative overflow-hidden px-4 py-28 sm:px-6 sm:py-36 min-h-[100dvh] flex flex-col justify-center">
+    <section
+      id="personal-letter"
+      ref={sceneRef}
+      className="relative overflow-hidden px-4 py-28 sm:px-6 sm:py-36 min-h-[100dvh] flex flex-col justify-center"
+    >
       {/* Light, breathable dawn gradient to dramatically soften the end of the page */}
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_bottom,#211833_0%,#362852_50%,#54417A_100%)]" />
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_22%_18%,rgba(229,212,255,0.12),transparent_40%),radial-gradient(circle_at_82%_78%,rgba(210,185,255,0.15),transparent_45%)]" />
@@ -94,12 +120,16 @@ function PersonalLetter() {
             "relative mx-auto mt-14 max-w-2xl overflow-hidden border border-violet-200/40 p-8 text-left sm:mt-16 sm:p-12",
             radii.card,
             "transition-all duration-1000 select-none",
-            hasRevealed ? "cursor-default" : "cursor-pointer active:cursor-grabbing touch-none",
+            hasRevealed
+              ? "cursor-default"
+              : "cursor-pointer active:cursor-grabbing touch-none",
             isHolding || hasRevealed
               ? "bg-[linear-gradient(165deg,rgba(255,249,252,0.95),rgba(238,228,255,0.85))] shadow-[0_30px_60px_rgba(24,16,45,0.4),0_0_40px_rgba(217,195,247,0.3),inset_0_1px_1px_rgba(255,255,255,0.8)]"
-              : "bg-[linear-gradient(165deg,rgba(255,249,252,0.65),rgba(238,228,255,0.5))] shadow-[0_16px_32px_rgba(24,16,45,0.2),inset_0_1px_1px_rgba(255,255,255,0.5)]"
+              : "bg-[linear-gradient(165deg,rgba(255,249,252,0.65),rgba(238,228,255,0.5))] shadow-[0_16px_32px_rgba(24,16,45,0.2),inset_0_1px_1px_rgba(255,255,255,0.5)]",
           )}
-          style={{ transform: (isHolding && !hasRevealed) ? "scale(1.02)" : "scale(1)" }}
+          style={{
+            transform: isHolding && !hasRevealed ? "scale(1.02)" : "scale(1)",
+          }}
           onMouseDown={startHold}
           onMouseUp={endHold}
           onMouseLeave={endHold}
@@ -121,12 +151,16 @@ function PersonalLetter() {
           <motion.div
             initial={{ opacity: 0, filter: "blur(12px)" }}
             animate={{
-              opacity: hasRevealed ? 1 : (isHolding ? 0.7 : 0.05),
-              filter: hasRevealed ? "blur(0px)" : (isHolding ? "blur(3px)" : "blur(12px)")
+              opacity: hasRevealed ? 1 : isHolding ? 0.7 : 0.05,
+              filter: hasRevealed
+                ? "blur(0px)"
+                : isHolding
+                  ? "blur(3px)"
+                  : "blur(12px)",
             }}
             transition={{
-              duration: hasRevealed ? 1.2 : (isHolding ? 1.8 : 0.6),
-              ease: "easeOut"
+              duration: hasRevealed ? 1.2 : isHolding ? 1.8 : 0.6,
+              ease: "easeOut",
             }}
             className="relative z-10 space-y-5 text-[15.5px] leading-relaxed text-[#4A3A70] sm:text-[16.5px]"
           >
@@ -135,29 +169,29 @@ function PersonalLetter() {
             </p>
 
             <p>
-              I don't know, intha website, gifts laam unaku pidikkumoo illayo,
-              <br className="hidden sm:block" />{" "}
-              but I still wanted to make something special for you da.
+              Therila, intha gifts, website laam unaku pidikkumoo illayo,
+              <br className="hidden sm:block" /> but I wanted to make something
+              special for you da.
             </p>
 
-            <p>
-              Pudikalana solliru da, return potaralam 🤭
-            </p>
+            <p>Pudikalana solliru da, return potaralam 🤭</p>
 
             <p>
               I hope this birthday brings you peace, laughter, warmth,
-              <br className="hidden sm:block" />{" "}
-              and all the little things that make life feel worth smiling about.
+              <br className="hidden sm:block" /> and I hope you always remember
+              how deeply special you are 🤗.
             </p>
 
             <p>
-              And more than anything,
-              <br className="hidden sm:block" />
-              I hope you always remember how deeply special you are 💜.
+              Ethir paakatha nerathula,
+              <br className="hidden sm:block" /> Ethir paakama kedacha thangom
+              da neeyu enaku 💜.
             </p>
 
             <div className="pt-2">
-              <p className="font-medium text-[#4F3B79]">Happy Birthday Thangoww✨</p>
+              <p className="font-medium text-[#4F3B79]">
+                Happy Birthday Thangoww✨
+              </p>
               <p className="pt-1 font-serif text-[#5C467F]">— NONU</p>
             </div>
 
@@ -182,13 +216,13 @@ function PersonalLetter() {
                 exit={{ opacity: 0, scale: 1.05 }}
                 transition={{ duration: 0.8 }}
                 className="absolute inset-0 z-20 flex flex-col items-center justify-center p-6 text-center bg-white/10 backdrop-blur-[2px]"
-                style={{ pointerEvents: 'none' }}
+                style={{ pointerEvents: "none" }}
               >
                 <motion.div
                   animate={{
                     opacity: isHolding ? 0 : 1,
                     scale: isHolding ? 1.1 : 1,
-                    y: isHolding ? -10 : 0
+                    y: isHolding ? -10 : 0,
                   }}
                   transition={{ duration: 0.6 }}
                   className="flex flex-col items-center"
@@ -196,7 +230,11 @@ function PersonalLetter() {
                   <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/30 border border-white/50 text-[#5C467F] shadow-[0_8px_32px_rgba(30,20,50,0.1),inset_0_1px_2px_rgba(255,255,255,0.8)] mb-4">
                     <motion.div
                       animate={{ scale: [1, 1.1, 1] }}
-                      transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+                      transition={{
+                        repeat: Infinity,
+                        duration: 2,
+                        ease: "easeInOut",
+                      }}
                     >
                       💌
                     </motion.div>
@@ -211,7 +249,6 @@ function PersonalLetter() {
               </motion.div>
             )}
           </AnimatePresence>
-
         </motion.article>
       </div>
     </section>
