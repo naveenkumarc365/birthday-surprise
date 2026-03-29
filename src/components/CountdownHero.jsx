@@ -4,7 +4,8 @@ import { Lock, Sparkles } from "lucide-react";
 
 import { cn } from "../lib/cn";
 import {
-  componentStyles,  motionPresets,
+  componentStyles,
+  motionPresets,
   radii,
   shadows,
   textStyles,
@@ -138,14 +139,18 @@ const UNLOCKED_DECOR = [
 
 function getTimeLeft(targetTime) {
   const now = Date.now();
-  const diff = Math.max(0, targetTime - now);
+  const diff = targetTime - now;
+
+  if (diff <= 0) {
+    return { days: 0, hours: 0, minutes: 0, seconds: 0, isBirthday: true };
+  }
 
   const days = Math.floor(diff / (1000 * 60 * 60 * 24));
   const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
   const minutes = Math.floor((diff / (1000 * 60)) % 60);
   const seconds = Math.floor((diff / 1000) % 60);
 
-  return { days, hours, minutes, seconds };
+  return { days, hours, minutes, seconds, isBirthday: false };
 }
 
 function DecorativeMotion({ item }) {
@@ -275,9 +280,7 @@ function CountdownUnit({ label, value }) {
         "transition-shadow duration-300 hover:border-[#D8CCFF]/70 hover:shadow-[0_12px_26px_rgba(168,138,246,0.34)]",
       )}
     >
-      <p
-        className="text-2xl font-serif font-semibold text-[#F6F1FF] sm:text-3xl"
-      >
+      <p className="text-2xl font-serif font-semibold text-[#F6F1FF] sm:text-3xl">
         {String(value).padStart(2, "0")}
       </p>
       <p className="mt-1.5 truncate text-[10px] uppercase tracking-[0.14em] text-[#D7CBEA]/95 sm:text-xs sm:tracking-[0.18em]">
@@ -287,11 +290,15 @@ function CountdownUnit({ label, value }) {
   );
 }
 
-function SecretSlideLock({ onComplete, isSecretGuessed }) {
+function SecretSlideLock({ onComplete, isSecretGuessed, isBirthday }) {
   const trackHeight = 128;
   const knobSize = 52;
   const maxTravel = trackHeight - knobSize;
   const threshold = maxTravel * 0.8;
+
+  const canFinalReveal = isBirthday && isSecretGuessed;
+  const shouldOpenPassword = !isSecretGuessed;
+  const isSliderLocked = !canFinalReveal && isSecretGuessed;
 
   const y = useMotionValue(0);
   const progress = useTransform(y, [0, maxTravel], [0, 1], { clamp: true });
@@ -311,6 +318,11 @@ function SecretSlideLock({ onComplete, isSecretGuessed }) {
   const handleDragEnd = () => {
     const current = y.get();
 
+    if (isSliderLocked) {
+      animate(y, 0, { duration: 0.28, ease: "easeOut" });
+      return;
+    }
+
     if (current >= threshold) {
       animate(y, maxTravel - 2, { duration: 0.16, ease: "easeOut" });
 
@@ -329,38 +341,44 @@ function SecretSlideLock({ onComplete, isSecretGuessed }) {
     animate(y, 0, { duration: 0.32, ease: "easeOut" });
   };
 
+  const getTopText = () => {
+    if (canFinalReveal) return "Slide down to enter your world ✨";
+    if (shouldOpenPassword && isBirthday) return "Slide to guess the password 💌";
+    if (shouldOpenPassword) return "Slide to peek the secret ✨";
+    return "You found the secret 💖";
+  };
+
+  const getBottomText = () => {
+    if (canFinalReveal) return "Your little world is waiting below…";
+    if (isSecretGuessed && !isBirthday) return "Come back when the countdown ends…";
+    return "";
+  };
+
   return (
     <div className="mt-4 flex flex-col items-center">
       <div className="order-1 relative mb-1 h-10 text-center">
-        {isSecretGuessed ? (
-          <>
-            <p className="text-sm text-[#E9DEFF]">
-              You already found the secret 💖
-            </p>
-            <p className="mt-1 text-[11px] text-[#C9BCDF]">
-              Now come back when the countdown ends…
-            </p>
-          </>
+        <p className="text-sm text-[#E9DEFF]">{getTopText()}</p>
+
+        {getBottomText() ? (
+          <p className="mt-1 text-[11px] text-[#C9BCDF]">{getBottomText()}</p>
         ) : (
           <>
-            <motion.p
-              style={{ opacity: peekOpacity, y: peekY }}
-              className="text-sm text-[#E9DEFF]"
-            >
-              Slide to peek the secret ✨
-            </motion.p>
-            <motion.p
-              style={{ opacity: guessOpacity, y: guessY }}
-              className="pointer-events-none absolute inset-x-0 top-0 text-sm text-[#E9DEFF]"
-            >
-              Guess the password 💌
-            </motion.p>
-            <motion.p
-              style={{ opacity: almostOpacity, y: almostY }}
-              className="pointer-events-none absolute inset-x-0 top-0 text-sm text-[#E9DEFF]"
-            >
-              Almost there… 💖
-            </motion.p>
+            {!isSliderLocked && !canFinalReveal && !isSecretGuessed && (
+              <>
+                <motion.p
+                  style={{ opacity: guessOpacity, y: guessY }}
+                  className="pointer-events-none absolute inset-x-0 top-0 text-sm text-[#E9DEFF]"
+                >
+                  Guess the password 💌
+                </motion.p>
+                <motion.p
+                  style={{ opacity: almostOpacity, y: almostY }}
+                  className="pointer-events-none absolute inset-x-0 top-0 text-sm text-[#E9DEFF]"
+                >
+                  Almost there… 💖
+                </motion.p>
+              </>
+            )}
           </>
         )}
       </div>
@@ -369,7 +387,11 @@ function SecretSlideLock({ onComplete, isSecretGuessed }) {
         <motion.span
           className={cn(
             "pointer-events-none absolute left-1/2 top-2 h-20 w-20 -translate-x-1/2 rounded-full blur-2xl",
-            isSecretGuessed ? "bg-violet-400/26" : "bg-indigo-400/18",
+            canFinalReveal
+              ? "bg-fuchsia-400/30"
+              : isSecretGuessed
+                ? "bg-violet-400/26"
+                : "bg-indigo-400/18",
           )}
           animate={{ opacity: [0.35, 0.62, 0.35], scale: [0.9, 1.05, 0.9] }}
           transition={{ duration: 4.8, repeat: Infinity, ease: "easeInOut" }}
@@ -390,7 +412,7 @@ function SecretSlideLock({ onComplete, isSecretGuessed }) {
           />
 
           <motion.div
-            drag="y"
+            drag={isSliderLocked ? false : "y"}
             dragConstraints={{ top: 0, bottom: maxTravel }}
             dragElastic={0.02}
             dragMomentum={false}
@@ -398,11 +420,24 @@ function SecretSlideLock({ onComplete, isSecretGuessed }) {
             style={{ y }}
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.98 }}
-            className="relative z-10 inline-flex h-[52px] w-[52px] cursor-grab touch-none items-center justify-center rounded-full border border-violet-200/55 bg-gradient-to-b from-[#F3EAFF] to-[#DCCBFF] text-[#4A376F] shadow-[0_10px_22px_rgba(102,76,168,0.32)] active:cursor-grabbing"
+            className={cn(
+              "relative z-10 inline-flex h-[52px] w-[52px] touch-none items-center justify-center rounded-full border border-violet-200/55 bg-gradient-to-b from-[#F3EAFF] to-[#DCCBFF] text-[#4A376F] shadow-[0_10px_22px_rgba(102,76,168,0.32)]",
+              isSliderLocked ? "cursor-not-allowed opacity-90" : "cursor-grab active:cursor-grabbing"
+            )}
             animate={
-              isSecretGuessed
-                ? { scale: [1, 1.02, 1] }
-                : {
+              canFinalReveal
+                ? {
+                  scale: [1, 1.04, 1],
+                  y: [0, 6, 0],
+                  boxShadow: [
+                    "0 8px 20px rgba(6,3,14,0.58)",
+                    "0 12px 28px rgba(192,132,252,0.42)",
+                    "0 8px 20px rgba(6,3,14,0.58)",
+                  ],
+                }
+                : isSecretGuessed
+                  ? { scale: [1, 1.02, 1] }
+                  : {
                     scale: [1, 1.02, 1],
                     y: [0, 6, 0],
                     boxShadow: [
@@ -427,7 +462,9 @@ function SecretSlideLock({ onComplete, isSecretGuessed }) {
               }}
             />
 
-            {isSecretGuessed ? (
+            {canFinalReveal ? (
+              <span className="text-xl leading-none">💖</span>
+            ) : isSecretGuessed ? (
               <span className="text-xl leading-none">💖</span>
             ) : (
               <Lock size={20} strokeWidth={1.9} />
@@ -447,7 +484,11 @@ function readSecretGuessed() {
   return window.localStorage.getItem(SECRET_GUESSED_KEY) === "true";
 }
 
-function CountdownHero({ locked = true, onOpenSecretModal }) {
+function CountdownHero({
+  locked = true,
+  onOpenSecretModal,
+  onFinalReveal,
+}) {
   const unlockTime = useMemo(() => new Date(UNLOCK_DATE).getTime(), []);
   const [timeLeft, setTimeLeft] = useState(() => getTimeLeft(unlockTime));
   const [isSecretGuessed, setIsSecretGuessed] = useState(() =>
@@ -486,6 +527,17 @@ function CountdownHero({ locked = true, onOpenSecretModal }) {
     };
   }, [locked]);
 
+  const isBirthday = timeLeft.isBirthday;
+
+  const handleSliderComplete = () => {
+    if (isBirthday && isSecretGuessed) {
+      onFinalReveal?.();
+      return;
+    }
+
+    onOpenSecretModal?.();
+  };
+
   const handleScroll = () => {
     const target = document.querySelector("#birthday-reveal");
 
@@ -497,9 +549,7 @@ function CountdownHero({ locked = true, onOpenSecretModal }) {
   if (locked) {
     return (
       <section className="relative flex min-h-[100svh] box-border items-center justify-center overflow-hidden bg-[radial-gradient(circle_at_52%_18%,rgba(216,204,255,0.34),transparent_36%),radial-gradient(circle_at_80%_78%,rgba(179,157,219,0.26),transparent_40%),linear-gradient(160deg,rgba(26,19,48,1)_0%,rgba(42,31,71,1)_52%,rgba(59,44,99,1)_100%)] px-4 py-6 sm:min-h-screen sm:px-6 sm:py-12">
-        <div
-          className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.02),rgba(15,10,30,0.38))]"
-        />
+        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.02),rgba(15,10,30,0.38))]" />
         <div className="pointer-events-none absolute -left-16 top-10 h-56 w-56 rounded-full bg-violet-300/28 blur-3xl" />
         <div className="pointer-events-none absolute -right-14 bottom-16 h-64 w-64 rounded-full bg-violet-400/22 blur-3xl" />
         <div className="pointer-events-none absolute left-1/2 top-[36%] h-52 w-52 -translate-x-1/2 rounded-full bg-[#D8CCFF]/24 blur-3xl" />
@@ -534,59 +584,66 @@ function CountdownHero({ locked = true, onOpenSecretModal }) {
           </div>
 
           <div className="relative z-10">
-          <p className="text-[11px] uppercase tracking-[0.22em] text-[#C9BCDF]">For My THangoww 🥳</p>
-          <p className="mt-2 text-[11px] tracking-[0.12em] text-[#C9BCDF]/78 sm:text-xs">
-            A small surprise, made with love
-          </p>
+            <p className="text-[11px] uppercase tracking-[0.22em] text-[#C9BCDF]">
+              For My THangoww 🥳
+            </p>
+            <p className="mt-2 text-[11px] tracking-[0.12em] text-[#C9BCDF]/78 sm:text-xs">
+              A small surprise, made with love
+            </p>
 
-          {typeof onOpenSecretModal === "function" ? (
-            <SecretSlideLock
-              onComplete={onOpenSecretModal}
-              isSecretGuessed={isSecretGuessed}
-            />
-          ) : null}
+            {typeof handleSliderComplete === "function" ? (
+              <SecretSlideLock
+                onComplete={handleSliderComplete}
+                isSecretGuessed={isSecretGuessed}
+                isBirthday={isBirthday}
+              />
+            ) : null}
 
-          <h1
-            className="mt-2 text-3xl leading-tight font-serif text-[#F6F1FF] sm:mt-3 sm:text-4xl"
-          >
-            A little world I made for you.
-          </h1>
-          <p className="mt-3 text-sm text-[#E1D6F4]/96 sm:text-base">
-            Unlocks on your birthday ✨
-          </p>
+            <motion.h1
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, ease: "easeOut", delay: 1.2 }}
+              className="mt-2 text-3xl leading-tight font-serif text-[#F6F1FF] sm:mt-3 sm:text-4xl"
+            >
+              A little world I made for you.
+            </motion.h1>
 
-          <div className="mx-auto mt-8 grid w-full max-w-sm grid-cols-2 gap-2.5 sm:max-w-none sm:grid-cols-4 sm:gap-3.5">
-            <CountdownUnit
-              label={COUNTDOWN_SEGMENTS[0]}
-              value={timeLeft.days}
-            />
-            <CountdownUnit
-              label={COUNTDOWN_SEGMENTS[1]}
-              value={timeLeft.hours}
-            />
-            <CountdownUnit
-              label={COUNTDOWN_SEGMENTS[2]}
-              value={timeLeft.minutes}
-            />
-            <CountdownUnit
-              label={COUNTDOWN_SEGMENTS[3]}
-              value={timeLeft.seconds}
-            />
+            <motion.p
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.65, ease: "easeOut", delay: 1.36 }}
+              className="mt-3 text-sm text-[#E1D6F4]/96 sm:text-base"
+            >
+              {isBirthday
+                ? "It’s your day now ✨"
+                : "Unlocks on your birthday ✨"}
+            </motion.p>
+
+            <div className="mx-auto mt-8 grid w-full max-w-sm grid-cols-2 gap-2.5 sm:max-w-none sm:grid-cols-4 sm:gap-3.5">
+              <CountdownUnit label={COUNTDOWN_SEGMENTS[0]} value={timeLeft.days} />
+              <CountdownUnit label={COUNTDOWN_SEGMENTS[1]} value={timeLeft.hours} />
+              <CountdownUnit label={COUNTDOWN_SEGMENTS[2]} value={timeLeft.minutes} />
+              <CountdownUnit label={COUNTDOWN_SEGMENTS[3]} value={timeLeft.seconds} />
+            </div>
+
+            <p className="mt-5 text-xs text-[#C9BCDF]/82 sm:text-sm">
+              {isBirthday
+                ? isSecretGuessed
+                  ? "One last little pull… and it’s all yours 💜"
+                  : "Your day is here… but there’s still one secret left 💌"
+                : "Come back when the clock says it's your day ✨"}
+            </p>
           </div>
-
-          <p className="mt-5 text-xs text-[#C9BCDF]/82 sm:text-sm">
-            Come back when the clock says it's your day ✨
-          </p>
-        </div>
-      </motion.div>
-    </section>
+        </motion.div>
+      </section>
     );
   }
 
   return (
     <section className="relative flex min-h-[84vh] items-center justify-center overflow-hidden px-4 py-16 sm:px-6">
-      <div className="pointer-events-none absolute -left-24 top-12 h-56 w-56 rounded-full bg-rose-200/40 blur-3xl" />
-      <div className="pointer-events-none absolute right-0 top-24 h-60 w-60 rounded-full bg-pink-200/35 blur-3xl" />
+      <div className="pointer-events-none absolute -left-24 top-12 h-56 w-56 rounded-full bg-rose-200/35 blur-3xl" />
+      <div className="pointer-events-none absolute right-0 top-24 h-60 w-60 rounded-full bg-pink-200/28 blur-3xl" />
+      <div className="pointer-events-none absolute bottom-16 left-1/3 h-40 w-40 rounded-full bg-violet-100/30 blur-3xl" />
 
       {UNLOCKED_DECOR.map((item) => (
         <DecorativeMotion key={item.className} item={item} />
@@ -595,49 +652,53 @@ function CountdownHero({ locked = true, onOpenSecretModal }) {
       <motion.div
         {...motionPresets.fadeUp}
         className={cn(
-          "relative z-10 w-full max-w-2xl p-7 text-center sm:p-10",
+          "relative z-10 w-full max-w-2xl px-7 pb-9 pt-8 text-center sm:px-10 sm:pb-11 sm:pt-10",
           radii.card,
           componentStyles.glassCard,
           "shadow-xl shadow-rose-100/50",
         )}
       >
-        <p className={textStyles.microLabel}>Birthday Unlocked ✨</p>
+        <p className={textStyles.microLabel}>For You ✨</p>
 
-        <h1
-          className={cn(
-            "mt-4 text-4xl leading-tight sm:text-5xl",
-            textStyles.headingSerif,
-          )}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2, duration: 0.7, ease: "easeOut" }}
         >
-          Happy Birthday
-        </h1>
-        <p className="mt-3 text-base text-rose-700 sm:text-lg">
-          A little surprise, made just for you.
-        </p>
+          <h1
+            className={cn(
+              "mt-5 text-3xl leading-tight sm:text-4xl",
+              textStyles.headingSerif,
+            )}
+          >
+            A little world I made for you.
+          </h1>
 
-        <p
-          className={cn(
-            "mx-auto mt-5 max-w-lg text-sm leading-relaxed sm:text-base",
-            textStyles.bodySoft,
-          )}
-        >
-          I made this little space to celebrate you and make you smile today.
-        </p>
+          <p
+            className={cn(
+              "mx-auto mt-3 max-w-lg text-sm leading-relaxed sm:text-base",
+              textStyles.bodySoft,
+            )}
+          >
+            I put every thought, every memory, every feeling into this space.
+            Hope it makes you smile today. 🎂
+          </p>
 
-        <motion.button
-          type="button"
-          whileTap={{ scale: 0.98 }}
-          whileHover={{ y: -1 }}
-          onClick={handleScroll}
-          className={cn(
-            componentStyles.pillButton,
-            "mt-8",
-            shadows.soft,
-            shadows.hover,
-          )}
-        >
-          Scroll to Begin
-        </motion.button>
+          <motion.button
+            type="button"
+            whileTap={{ scale: 0.98 }}
+            whileHover={{ y: -1 }}
+            onClick={handleScroll}
+            className={cn(
+              componentStyles.pillButton,
+              "mt-8",
+              shadows.soft,
+              shadows.hover,
+            )}
+          >
+            Begin the surprise →
+          </motion.button>
+        </motion.div>
       </motion.div>
     </section>
   );

@@ -4,27 +4,22 @@ import { gradients } from "./lib/theme";
 
 import Navbar from "./components/Navbar";
 import CountdownHero from "./components/CountdownHero";
+import RevealIntro from "./components/reveal/RevealIntro";
+import StoryIntro from "./components/reveal/StoryIntro";
+import ConnectionSection from "./components/reveal/ConnectionSection";
+import TheYouIKnow from "./components/TheYouIKnow";
 import BirthdayReveal from "./components/BirthdayReveal";
 import NoteSection from "./components/NoteSection";
 import MemoryLane from "./components/MemoryLane";
 import BirthdayBox from "./components/BirthdayBox";
+import PersonalLetter from "./components/PersonalLetter";
 import WhyIChoseThese from "./components/WhyIChoseThese";
 import FinalSection from "./components/FinalSection";
 import SecretRevealModal from "./components/SecretRevealModal";
 
-const UNLOCK_DATE = "2026-03-30T00:00:00";
-const UNLOCK_TIMESTAMP = new Date(UNLOCK_DATE).getTime();
-
 function App() {
-  const [now, setNow] = useState(() => Date.now());
   const [isSecretModalOpen, setIsSecretModalOpen] = useState(false);
-
-  useEffect(() => {
-    const timer = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(timer);
-  }, []);
-
-  const isUnlocked = now >= UNLOCK_TIMESTAMP;
+  const [hasRevealedFinalStage, setHasRevealedFinalStage] = useState(false);
 
   const openSecretModal = () => {
     setIsSecretModalOpen(true);
@@ -34,35 +29,51 @@ function App() {
     setIsSecretModalOpen(false);
   };
 
-  if (isUnlocked === false) {
+  const handleFinalReveal = () => {
+    setHasRevealedFinalStage(true);
+    setIsSecretModalOpen(false);
+  };
+
+  if (hasRevealedFinalStage === false) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-rose-50 via-pink-50 to-white text-slate-900">
-        <CountdownHero locked onOpenSecretModal={openSecretModal} />
+        <CountdownHero
+          locked
+          onOpenSecretModal={openSecretModal}
+          onFinalReveal={handleFinalReveal}
+        />
         <SecretRevealModal
           isOpen={isSecretModalOpen}
           onClose={closeSecretModal}
-          isUnlocked={isUnlocked}
         />
       </div>
     );
   }
 
   return (
-    <div className={["min-h-screen", gradients.romanticBg, "text-slate-900"].join(" ")}>
+    <div
+      className={["min-h-screen", gradients.romanticBg, "text-slate-900"].join(
+        " ",
+      )}
+    >
       <motion.main
-        className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-4 pb-16 pt-4 sm:px-6 lg:px-8"
+        className="mx-auto flex min-h-screen w-full flex-col scroll-smooth"
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
       >
         <Navbar />
-        <CountdownHero locked={false} />
-        <BirthdayReveal />
-        <NoteSection />
+        <RevealIntro />
+        <StoryIntro />
+        <ConnectionSection />
+        <TheYouIKnow />
         <MemoryLane />
         <BirthdayBox />
-        <WhyIChoseThese />
+        <PersonalLetter />
         <FinalSection />
+        <BirthdayReveal />
+        <NoteSection />
+        <WhyIChoseThese />
       </motion.main>
     </div>
   );
