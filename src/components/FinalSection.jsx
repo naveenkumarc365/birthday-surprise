@@ -205,7 +205,7 @@ function FinalSection() {
                   <motion.div variants={textVariants} className="h-[1px] w-12 bg-gradient-to-r from-transparent via-[#8B75B5]/30 to-transparent mb-7" />
 
                   <motion.p variants={textVariants} className="text-[15px] sm:text-[16px] text-[#4A3A70] leading-relaxed max-w-[260px] mb-8">
-                    I just wanted to leave one last smile for you here.
+                    I just wanted to leave a smile for you here.
                   </motion.p>
 
                   <motion.p variants={textVariants} className="font-serif text-[18px] text-[#3F2F64] font-medium tracking-wide">
